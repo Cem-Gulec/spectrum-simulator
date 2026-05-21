@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import html2canvas from "html2canvas"; 
 import "./App.css";
 
-import SidePanel from "./components/SidePanel";
 import ControlButton from "./components/ControlButton";
 import SpectrumChart from "./components/SpectrumChart";
 import { 
@@ -154,54 +153,63 @@ function App() {
 
   return (
     <main className="app">
-      {errorMessage && <p>{errorMessage}</p>}
+      <div className="app-container">
+        {errorMessage && <p>{errorMessage}</p>}
 
-      {!errorMessage && (
-        <>
-          <section className="timer">
-            <h1>{timerText}</h1>
-            <select
-              value={selectedTimestampIndex}
-              onChange={handleTimestampSelect}
-            >
-              <option value="">Select timestamp</option>
-
-              {everyTimestamp.map((timestamp, index) => (
-                <option key={index} value={index}>
-                  {index} - {formatTimestamp(timestamp)}
-                </option>
-              ))}
-            </select>
-          </section>
-
-          <section className="dashboard">
-            <div className="left-column">
-              <div ref={chartRef}>
-                <SpectrumChart 
-                  data={spectrumData}
-                  minLimit={minLimit}
-                  maxLimit={maxLimit}
-                />
+        {!errorMessage && (
+          <>
+            <section className="dashboard">
+              <div className="left-column">
+                <div ref={chartRef}>
+                  <SpectrumChart 
+                    data={spectrumData}
+                    minLimit={minLimit}
+                    maxLimit={maxLimit}
+                  />
+                </div>
               </div>
-              <div className="controls">
-                <ControlButton
-                  icon={isRunning ? "||" : "▷"}
-                  variant="start"
-                  onClick={handleStart}
-                />
+              <div className="right-column">
+                <section className="timer">
+                  <h1>{timerText}</h1>
+                  
+                  <select
+                    value={selectedTimestampIndex}
+                    onChange={handleTimestampSelect}
+                  >
+                    <option value="">Select timestamp</option>
 
-                <ControlButton
-                  icon="▫"
-                  variant="stop"
-                  onClick={handleStop}
-                />
+                    {everyTimestamp.map((timestamp, index) => (
+                      <option key={index} value={index}>
+                        {index} - {formatTimestamp(timestamp)}
+                      </option>
+                    ))}
+                  </select>
+                </section>
+                
+                <div className="controls">
+                  <ControlButton
+                    icon={isRunning ? "||" : "▷"}
+                    variant="start"
+                    onClick={handleStart}
+                  />
+
+                  <ControlButton
+                    icon="▫"
+                    variant="stop"
+                    onClick={handleStop}
+                  />
+
+                  <ControlButton
+                    icon="⤓"
+                    variant="start"
+                    onClick={handleTakeScreenshot}
+                  />
+                </div>
               </div>
-            </div>
-          
-          <SidePanel onTakeScreenshot={handleTakeScreenshot} />
-          </section>
-        </>
-      )}
+            </section>
+          </>
+        )}
+      </div>
     </main>
   );
 }

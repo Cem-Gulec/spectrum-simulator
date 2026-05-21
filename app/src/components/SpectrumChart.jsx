@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   ReferenceLine,
+  Tooltip,
 } from "recharts";
 
 function generateTicks(start, end, step) {
@@ -27,6 +28,11 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
   const maxWavenumber = data[data.length - 1].wavenumber;
   const xTicks = generateTicks(minWavenumber, maxWavenumber, 100);
 
+  const range = maxLimit - minLimit;
+  const padding = range * 0.05; // 5% extra space
+  const roundedMinLimit = Math.floor((minLimit - padding) * 1000) / 1000;
+  const roundedMaxLimit = Math.ceil((maxLimit + padding) * 100) / 100;
+
   return (
     <section className="chart-card">
       <ResponsiveContainer width="100%" height="100%">
@@ -34,9 +40,32 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
           data={data}
           margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
         >
+          <Tooltip
+            contentStyle={{
+              backgroundColor: "#10202d",
+              border: "1px solid #3f586c",
+              borderRadius: "6px",
+              color: "#d8e7f4",
+            }}
+            labelStyle={{
+              color: "#91a6b8",
+              fontWeight: 700,
+            }}
+            formatter={(value) => value.toFixed(5)}
+          />
+          
           <CartesianGrid stroke="#223545" strokeWidth={1} />
 
-          <ReferenceLine y={0} stroke="#7f93a3" strokeWidth={1.5} />
+          <ReferenceLine 
+            y={0} 
+            stroke="#7f93a3" 
+            strokeWidth={1.5} 
+            label = {{
+              value: "0",
+              position: "left",
+              fill: "#91a6b8"
+            }}
+          />
 
           <XAxis
             dataKey="wavenumber"
@@ -51,11 +80,13 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
               position: "insideBottom",
               offset: -20,
               fill: "#91a6b8",
+              fontSize: 20,
+              fontWeight: 800,
             }}
           />
 
           <YAxis 
-            domain={[minLimit, maxLimit]}
+            domain={[roundedMinLimit, roundedMaxLimit]}
             stroke="#7f93a3"           
             axisLine={false}
             tickLine={false}
@@ -65,7 +96,10 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
               angle: -90,
               position: "insideLeft",
               dx: -30,
+              dy: 50,
               fill: "#91a6b8",
+              fontSize: 20,
+              fontWeight: 800,
             }}
           />
 
