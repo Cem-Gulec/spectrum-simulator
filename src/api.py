@@ -1,5 +1,5 @@
 import threading
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from simulator import create_simulator
 
 app = FastAPI()
@@ -17,7 +17,7 @@ def start_simulation():
     simulator.start()
 
     return {
-        "status": "started",
+        "status": "started" if simulator.running else "paused",
         "running": simulator.running,
         "current_index": simulator.current_index
     }
@@ -62,3 +62,17 @@ def get_current_spectrum():
         "current_index": simulator.current_index,
         "spectrum": simulator.current_spectrum.tolist()
     }
+
+@app.put("/set-simulation-time/{timestamp}")
+def set_simulation_time(timestamp):
+    try:
+        simulator.set_simulation_time(timestamp)
+
+        return {
+            "status": "simulation time updated",
+            "current_index": simulator.current_index,
+            "spectrum": simulator.current_spectrum.tolist()
+        }
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
