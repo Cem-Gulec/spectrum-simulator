@@ -10,6 +10,18 @@ def parse_data(df):
 
     return timestamps, spectra, wavenumbers
 
+def create_simulator():
+    data_path = Path("./../data/spectra.csv")
+
+    df = pd.read_csv(data_path)
+    timestamps, spectra, wavenumbers = parse_data(df)
+
+    return SpectrumSimulator(
+        timestamps=timestamps,
+        spectra=spectra,
+        wavenumbers=wavenumbers
+    )
+
 class SpectrumSimulator:
     def __init__(self, timestamps, spectra, wavenumbers):
         self.timestamps = timestamps
@@ -24,11 +36,17 @@ class SpectrumSimulator:
         self.restart = False
 
         self.current_index = 0
-        self.latest_spectrum = self.spectra.iloc[0]
+        self.first_spectrum = self.spectra.iloc[0]
+        self.last_spectrum = self.spectra.iloc[-1]
+        self.current_spectrum = self.spectra.iloc[0]
         
     def start(self):
         self.running = True
         print("[START] Simulation started\n")
+
+    def pause(self):
+        self.running = False
+        print("[PAUSE] Simulation paused\n")
 
     def stop(self):
         self.running = False
@@ -56,7 +74,7 @@ class SpectrumSimulator:
                 if self.restart:
                     self.restart = False
                     self.current_index = 0
-                    self.latest_spectrum = self.spectra.iloc[0]
+                    self.current_spectrum = self.spectra.iloc[0]
 
                     print("[RESTART] Resetting simulation to first spectrum\n")
                     break
@@ -77,7 +95,7 @@ class SpectrumSimulator:
                 if self.restart:
                     self.restart = False
                     self.current_index = 0
-                    self.latest_spectrum = self.spectra.iloc[0]
+                    self.current_spectrum = self.spectra.iloc[0]
                     break
 
                 # Compensate paused duration
@@ -86,7 +104,7 @@ class SpectrumSimulator:
                     start_time += paused_duration
 
                 self.current_index = i
-                self.latest_spectrum = self.spectra.iloc[i]
+                self.current_spectrum = self.spectra.iloc[i]
 
                 timestamp = self.timestamps.iloc[i]
 
@@ -110,27 +128,16 @@ class SpectrumSimulator:
 
                 time.sleep(pause_time)
 
-            print("[CYCLE END] Reached end timestamp. Restarting from beginning.\n")
-
             # Reset automatically after reaching end
             self.current_index = 0
-            self.latest_spectrum = self.spectra.iloc[0]                                                                    
+            self.current_spectrum = self.spectra.iloc[0]                                                                    
+
 
 def main():
-    data_path = Path("./../data/spectra.csv")
-
-    df = pd.read_csv(data_path)
-    timestamps, spectra, wavenumbers = parse_data(df)
-
-    simulator = SpectrumSimulator(
-        timestamps  = timestamps,
-        spectra     = spectra,
-        wavenumbers = wavenumbers
-    )
+    simulator = create_simulator()
 
     simulator.start()
     simulator.replay_simulation()
-
 
 if __name__ == "__main__":
     main()
