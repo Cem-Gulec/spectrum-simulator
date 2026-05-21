@@ -1,8 +1,20 @@
 import threading
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from simulator import create_simulator
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 simulator = create_simulator()
 
 simulation_thread = threading.Thread(
@@ -60,7 +72,8 @@ def get_last_spectrum():
 def get_current_spectrum():
     return {
         "current_index": simulator.current_index,
-        "spectrum": simulator.current_spectrum.tolist()
+        "spectrum": simulator.current_spectrum.tolist(),
+        "wavenumbers": simulator.wavenumbers.tolist()
     }
 
 @app.put("/set-simulation-time/{timestamp}")
