@@ -36,10 +36,15 @@ class SpectrumSimulator:
         self.restart = False
         self.time_changed = False
 
+        self.pause_time = 0
         self.current_index = 0
+        self.current_spectrum = self.spectra.iloc[0]
+        self.current_timestamp = self.timestamps.iloc[0]
+        
         self.first_spectrum = self.spectra.iloc[0]
         self.last_spectrum = self.spectra.iloc[-1]
-        self.current_spectrum = self.spectra.iloc[0]
+        self.min_limit = self.spectra.min().min()
+        self.max_limit = self.spectra.max().max()
         
     def start(self):
         self.running = not self.running
@@ -96,6 +101,7 @@ class SpectrumSimulator:
                     self.restart = False
                     self.current_index = 0
                     self.current_spectrum = self.spectra.iloc[0]
+                    self.current_timestamp = self.timestamps.iloc[0]
 
                     print("[RESTART] Resetting simulation to first spectrum\n")
                     break
@@ -117,6 +123,7 @@ class SpectrumSimulator:
                     self.restart = False
                     self.current_index = 0
                     self.current_spectrum = self.spectra.iloc[0]
+                    self.current_timestamp = self.timestamps.iloc[0]
                     break
 
                 # If set_simulation_time done
@@ -131,6 +138,7 @@ class SpectrumSimulator:
 
                 self.current_index = i
                 self.current_spectrum = self.spectra.iloc[i]
+                self.current_timestamp = self.timestamps.iloc[i]
 
                 timestamp = self.timestamps.iloc[i]
 
@@ -150,10 +158,10 @@ class SpectrumSimulator:
                 #elapsed_time = time.time() - start_time
                 #pause_time = max(real_time - elapsed_time, 0)
 
-                pause_time = (next_timestamp - timestamp).total_seconds()
+                self.pause_time = (next_timestamp - timestamp).total_seconds()
                 
                 # to avoid negative values
-                pause_time = max(pause_time, 0)
+                self.pause_time = max(self.pause_time, 0)
 
                 '''print(
                     f"[TIMING] real_time={real_time:.4f}, "
@@ -161,15 +169,16 @@ class SpectrumSimulator:
                     f"pause_time={pause_time:.4f}\n"
                 )'''
 
-                print(f"[TIMING] pause_time={pause_time:.4f}\n")
+                print(f"[TIMING] pause_time={self.pause_time:.4f}\n")
 
-                time.sleep(pause_time)
+                time.sleep(self.pause_time)
 
                 i += 1
 
             # Reset automatically after reaching end
             self.current_index = 0
-            self.current_spectrum = self.spectra.iloc[0]                                                                    
+            self.current_spectrum = self.spectra.iloc[0]       
+            self.current_timestamp = self.timestamps.iloc[0]                                                             
 
 
 def main():

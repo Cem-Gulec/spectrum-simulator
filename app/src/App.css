@@ -12,3 +12,29 @@
   border-radius: 5px;
   background: rgba(18, 36, 51, 0.92);
 }
+
+.timer {
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.timer p {
+  margin: 0;
+  color: #96a8b7;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.timer span {
+  color: #ff2f7d;
+}
+
+.timer h1 {
+  margin: 2px 0 0;
+  color: #4ed7ff;
+  font-size: 56px;
+  line-height: 1;
+  letter-spacing: 3px;
+  text-shadow: 0 0 16px rgba(78, 215, 255, 0.45);
+}

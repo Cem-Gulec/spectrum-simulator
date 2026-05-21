@@ -72,8 +72,14 @@ def get_last_spectrum():
 def get_current_spectrum():
     return {
         "current_index": simulator.current_index,
+        "pause_time": simulator.pause_time,
         "spectrum": simulator.current_spectrum.tolist(),
-        "wavenumbers": simulator.wavenumbers.tolist()
+        "wavenumbers": simulator.wavenumbers.tolist(),
+        "min_limit": simulator.min_limit,
+        "max_limit": simulator.max_limit,
+        "first_timestamp": simulator.first_timestamp,
+        "end_timestamp": simulator.end_timestamp,
+        "current_timestamp": simulator.current_timestamp
     }
 
 @app.put("/set-simulation-time/{timestamp}")

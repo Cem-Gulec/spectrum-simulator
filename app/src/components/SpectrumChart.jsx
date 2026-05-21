@@ -5,6 +5,7 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
+  ReferenceLine,
 } from "recharts";
 
 function generateTicks(start, end, step) {
@@ -17,14 +18,13 @@ function generateTicks(start, end, step) {
   return ticks;
 }
 
-function SpectrumChart({ data }) {
+function SpectrumChart({ data, minLimit, maxLimit }) {
   if (!data || data.length === 0) {
     return <section className="chart-card" />;
   }
 
   const minWavenumber = data[0].wavenumber;
   const maxWavenumber = data[data.length - 1].wavenumber;
-
   const xTicks = generateTicks(minWavenumber, maxWavenumber, 100);
 
   return (
@@ -36,21 +36,46 @@ function SpectrumChart({ data }) {
         >
           <CartesianGrid stroke="#223545" strokeWidth={1} />
 
+          <ReferenceLine y={0} stroke="#7f93a3" strokeWidth={1.5} />
+
           <XAxis
             dataKey="wavenumber"
-            type="number"
-            domain={["dataMin", "dataMax"]}
-            ticks={xTicks}
             stroke="#7f93a3"
+            ticks={xTicks}
+            axisLine={false}
+            tickLine={{
+              strokeWidth: 0.5,
+            }}
+            label={{
+              value: "Wavenumber [cm⁻¹]",
+              position: "insideBottom",
+              offset: -20,
+              fill: "#91a6b8",
+            }}
           />
 
-          <YAxis stroke="#7f93a3" />
+          <YAxis 
+            domain={[minLimit, maxLimit]}
+            stroke="#7f93a3"           
+            axisLine={false}
+            tickLine={false}
+            tickFormatter={(value) => value.toFixed(4)}
+            label={{
+              value: "Absorbance",
+              angle: -90,
+              position: "insideLeft",
+              dx: -30,
+              fill: "#91a6b8",
+            }}
+          />
 
           <Line
             type="monotone"
             dataKey="absorbance"
             stroke="#ff2f7d"
             dot={false}
+            strokeWidth={2}
+            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>
