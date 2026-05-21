@@ -4,6 +4,15 @@ import time
 from matplotlib.widgets import Button
 from pathlib import Path
 
+
+### -> This was the initial file that I started working on
+### -> which allowed me to test every function in Part 1 and 2 with matplotlib elements.
+### -> However, since the task requires a backend running indepedently from matplotlib
+### -> and that can be manipulated easily and flexibly, later this code base is transfered
+### -> into simulator.py.
+
+
+
 # Parse different kinds of information inside the dataset
 def parse_data(df):
     timestamps = df.iloc[:, 0]

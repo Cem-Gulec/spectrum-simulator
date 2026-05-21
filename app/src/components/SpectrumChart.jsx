@@ -9,6 +9,8 @@ import {
   Tooltip,
 } from "recharts";
 
+// Generate a range of numbers applied with step in between
+// Aimed to be used to generate xTicks to evenly show them in the spectrum chart
 function generateTicks(start, end, step) {
   const ticks = [];
 
@@ -20,6 +22,7 @@ function generateTicks(start, end, step) {
 }
 
 function SpectrumChart({ data, minLimit, maxLimit }) {
+  // Validation to check data from the beginning
   if (!data || data.length === 0) {
     return <section className="chart-card" />;
   }
@@ -28,6 +31,8 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
   const maxWavenumber = data[data.length - 1].wavenumber;
   const xTicks = generateTicks(minWavenumber, maxWavenumber, 100);
 
+  // roundedMinLimit and roundedMinLimit is used to 
+  // have a dynamic y-axis min, max values to be used in the spectrum chart
   const range = maxLimit - minLimit;
   const padding = range * 0.05; // 5% extra space
   const roundedMinLimit = Math.floor((minLimit - padding) * 1000) / 1000;
@@ -40,7 +45,8 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
           data={data}
           margin={{ top: 40, right: 40, bottom: 40, left: 40 }}
         >
-          <Tooltip
+          
+          <Tooltip // Used to observe each data point and its associated values
             contentStyle={{
               backgroundColor: "#10202d",
               border: "1px solid #3f586c",
@@ -51,12 +57,13 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
               color: "#91a6b8",
               fontWeight: 700,
             }}
-            formatter={(value) => value.toFixed(5)}
+            labelFormatter={(label) => `Wavenumber: ${label}`}
+            formatter={(value) => [value.toFixed(5), "Absorbance"]}
           />
           
           <CartesianGrid stroke="#223545" strokeWidth={1} />
 
-          <ReferenceLine 
+          <ReferenceLine // Used to show x=0 line
             y={0} 
             stroke="#7f93a3" 
             strokeWidth={1.5} 
@@ -90,7 +97,7 @@ function SpectrumChart({ data, minLimit, maxLimit }) {
             stroke="#7f93a3"           
             axisLine={false}
             tickLine={false}
-            tickFormatter={(value) => value.toFixed(4)}
+            tickFormatter={(value) => value.toFixed(3)}
             label={{
               value: "Absorbance",
               angle: -90,

@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from simulator import create_simulator
 
 app = FastAPI()
+
+# This is added because React application runs at port 5173
+# Where api does not allow it originally
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -17,6 +20,8 @@ app.add_middleware(
 
 simulator = create_simulator()
 
+# Since the replay_simulation is the most important and ever looping function that 
+# does everything, our threads are focused on this function.
 simulation_thread = threading.Thread(
     target=simulator.replay_simulation,
     daemon=True

@@ -10,6 +10,7 @@ def parse_data(df):
 
     return timestamps, spectra, wavenumbers
 
+# Initializer function for SpectrumSimulator class
 def create_simulator():
     data_path = Path("./../data/spectra.csv")
 
@@ -47,6 +48,7 @@ class SpectrumSimulator:
         self.max_limit = self.spectra.max().max()
         
     def start(self):
+        # This allows us to both start and pause the simulation from start function
         self.running = not self.running
         
         if self.running:
@@ -64,11 +66,14 @@ class SpectrumSimulator:
         print("[STOP] Simulation stopped and restart requested\n")
 
     def set_simulation_time(self, target_timestamp):
+        # When the simulation time is set to a different timestamp
+        # I allow user to decide on next action by pausing the simulation
         self.running = False
 
         target_timestamp = pd.to_datetime(target_timestamp)
         target_index = self.timestamps[self.timestamps == target_timestamp].index[0]
 
+        # Setting target values
         self.current_index = target_index
         self.current_spectrum = self.spectra.iloc[target_index]
         self.time_changed = True
@@ -136,6 +141,7 @@ class SpectrumSimulator:
                     paused_duration = time.time() - pause_start
                     start_time += paused_duration
 
+                # Next index and related spectrum values are set
                 self.current_index = i
                 self.current_spectrum = self.spectra.iloc[i]
                 self.current_timestamp = self.timestamps.iloc[i]
@@ -152,12 +158,12 @@ class SpectrumSimulator:
                 else:
                     next_timestamp = self.end_timestamp
 
-                # Computing the time to pause on the current timestamp
-                # to match the simulation time
                 #real_time = (next_timestamp - self.first_timestamp).total_seconds()
                 #elapsed_time = time.time() - start_time
                 #pause_time = max(real_time - elapsed_time, 0)
 
+                # Computing the time to pause on the current timestamp
+                # to match the simulation time
                 self.pause_time = (next_timestamp - timestamp).total_seconds()
                 
                 # to avoid negative values
@@ -169,13 +175,15 @@ class SpectrumSimulator:
                     f"pause_time={pause_time:.4f}\n"
                 )'''
 
+                print(f"[INFO] Simulation starting from the beginning as it reached the timestamp= {self.end_timestamp}\n")
                 print(f"[TIMING] pause_time={self.pause_time:.4f}\n")
 
+                # Pausing the simulation with the pause_time calculated
                 time.sleep(self.pause_time)
 
                 i += 1
 
-            # Reset automatically after reaching end
+            # Resetting automatically after reaching end
             self.current_index = 0
             self.current_spectrum = self.spectra.iloc[0]       
             self.current_timestamp = self.timestamps.iloc[0]                                                             

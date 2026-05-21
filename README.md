@@ -43,4 +43,62 @@ We appreciate you following along so far! This part is **optional**. If you have
 
 ### Part 4: How to Run Your Code
 
-Please replace this with necessary **information to run your code** and include it in your submission.
+This project contains:
+- Simulator running in **Python**
+- **FastAPI** Backend
+- **React** Frontend
+
+> [!NOTE]
+> If another dataset needs to be run, its location should be at spectrum-simulator/data to work properly.
+---
+
+#### 4.1. Installation
+
+```bash
+# Go to the backend folder located at:
+cd spectrum-simulator/src
+
+# Create an environment
+python -m venv spectrum-simulator
+spectrum-simulator\Scripts\activate
+
+# Install dependencies for Python
+pip install -r ./../requirements.txt
+```
+
+```bash
+# Go to the frontend folder located at:
+cd ./../app
+
+# Install React dependencies
+npm install
+```
+
+#### 4.2. Running the Backend
+
+```bash
+# At the location spectrum-simulator/src
+uvicorn api:app --reload
+```
+
+The backend API will start at:
+```bash
+http://127.0.0.1:8000
+```
+
+You can also see the documentation at:
+```bash
+http://127.0.0.1:8000/docs
+```
+
+#### 4.3. Running the Frontend
+
+```bash
+cd spectrum-simulator/app/src
+npm run dev
+```
+
+React application will start at:
+```bash
+http://localhost:5173
+```
