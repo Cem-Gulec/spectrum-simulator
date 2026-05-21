@@ -1,142 +1,120 @@
-import matplotlib.pyplot as plt
 import pandas as pd
 import time
-from matplotlib.widgets import Button
 from pathlib import Path
 
 # Parse different kinds of information inside the dataset
 def parse_data(df):
-    timestamps = df.iloc[:, 0]
+    timestamps = pd.to_datetime(df.iloc[:, 0].str.strip())
     spectra = df.iloc[:, 1:]
     wavenumbers = spectra.columns.astype(int)
 
     return timestamps, spectra, wavenumbers
 
-# Plot consecutive spectrum values on each timestamp 
-def replay_simulation(timestamps, spectra, wavenumbers):
-    # Interactive mode on
-    plt.ion()
+class SpectrumSimulator:
+    def __init__(self, timestamps, spectra, wavenumbers):
+        self.timestamps = timestamps
+        self.spectra = spectra
+        self.wavenumbers = wavenumbers
 
-    # Creating initial figure and a set of subplots
-    fig, ax = plt.subplots()
-    plt.subplots_adjust(bottom = 0.25) # Leaving space for buttons
+        self.first_timestamp = self.timestamps.iloc[0]
+        self.end_timestamp = pd.to_datetime("2026-04-10T14:17:10.000")
 
-    # Configurations arranged for the plot
-    ax.set_xlabel("Wavenumber (cm^-1)")
-    ax.set_ylabel("Absorbance")
-    
-    # Putting a limitation on y axis 
-    # based on the min, max among the spectra values
-    ax.set_ylim(spectra.min().min(), spectra.max().max())
-    
-    # Initial values are obtained to plot first format of the plot
-    first_timestamp = pd.to_datetime(timestamps.iloc[0].strip())    
-    line, = ax.plot(wavenumbers, spectra.iloc[0])
+        # Control states
+        self.running = False
+        self.restart = False
 
-    # Control State
-    running = {"value": False}
-    restart = {"value": False}
+        self.current_index = 0
+        self.latest_spectrum = self.spectra.iloc[0]
+        
+    def start(self):
+        self.running = True
+        print("[START] Simulation started\n")
 
-    # Buttons
-    start_ax = plt.axes([0.45, 0.05, 0.05, 0.075])
-    stop_ax = plt.axes([0.55, 0.05, 0.05, 0.075])
+    def stop(self):
+        self.running = False
+        self.restart = True
+        print("[STOP] Simulation stopped and restart requested\n")
 
-    start_button = Button(start_ax, " ▶")
-    stop_button = Button(stop_ax, "■")
+    def replay_simulation(self):
+        print("[REPLAY] Replay loop started\n")
+        
+        while True:
+            print("[WAIT] Waiting for simulation to start\n")
 
-    def start(event):
-        running["value"] = not running["value"]
+            # Wait until simulation starts
+            while not self.running:
+                time.sleep(0.01)
 
-        if running["value"]:
-            start_button.label.set_text("||")
-        else:
-            start_button.label.set_text("▶")
+            print("[RUNNING] Simulation is running\n")
 
-        fig.canvas.draw_idle()
+            start_time = time.time()
 
-    def stop(event):
-        running["value"] = False
-        restart["value"] = True
+            # Replay from beginning
+            for i in range(len(self.spectra)):
 
-        start_button.label.set_text("▶")
+                # If restart requested
+                if self.restart:
+                    self.restart = False
+                    self.current_index = 0
+                    self.latest_spectrum = self.spectra.iloc[0]
 
-        # Reset plot visually
-        line.set_ydata(spectra.iloc[0])
-        ax.set_title(f"Spectrum at t={str(timestamps.iloc[0])}")
-        fig.canvas.draw_idle()
-
-
-    start_button.on_clicked(start)
-    stop_button.on_clicked(stop)
-    
-    # Replay the simulation from the start 
-    while True:
-        # Wait until start/continue button is pressed
-        while not running["value"]:
-            plt.pause(0.05)
-
-        # Iterating over each timestamp
-        for i in range(0, len(spectra)):
-            
-            # If restarted
-            if restart["value"]:
-                restart["value"] = False
-                break
-
-            # If paused, wait here
-            pause_start = None
-            while not running["value"]:
-                if restart["value"]:
-                    restart["value"] = False
+                    print("[RESTART] Resetting simulation to first spectrum\n")
                     break
 
-                if pause_start is None:
-                    pause_start = time.time()
+                # Pause handling
+                pause_start = None
 
-                plt.pause(0.05)
+                while not self.running:
 
-            if not running["value"]:
-                break
-            
-            # If we were paused, remove paused duration from timing
-            if pause_start is not None:
-                paused_duration = time.time() - pause_start
-                start_time += paused_duration
-            
-            spectrum = spectra.iloc[i]
-            timestamp = pd.to_datetime(timestamps.iloc[i].strip())
-            
-            if i == 0:
-                start_time = time.time()
-            
-            # Updating the values for the current spectrum
-            line.set_ydata(spectrum)
-                
-            if i + 1 < len(spectra): 
-                next_timestamp = pd.to_datetime(timestamps.iloc[i + 1].strip())
-            
-            # Set the timestamp for the end of the simulation
-            else:
-                next_timestamp = pd.to_datetime("2026-04-10T14:17:10.000")
+                    if self.restart:
+                        break
 
-            # Computing the time to pause on the current timestamp
-            # to match the simulation time
-            real_time = (next_timestamp - first_timestamp).total_seconds()
-            elapsed_time = time.time() - start_time
+                    if pause_start is None:
+                        pause_start = time.time()
 
-            # to avoid negative values
-            pause_time = max(real_time - elapsed_time, 0)
-            
-            ax.set_title(f"Spectrum at t={str(timestamp)}")
+                    time.sleep(0.01)
 
-            plt.pause(pause_time)
+                if self.restart:
+                    self.restart = False
+                    self.current_index = 0
+                    self.latest_spectrum = self.spectra.iloc[0]
+                    break
 
-            if restart["value"]:
-                restart["value"] = False
-                break
+                # Compensate paused duration
+                if pause_start is not None:
+                    paused_duration = time.time() - pause_start
+                    start_time += paused_duration
 
-    plt.ioff()
-    plt.show()
+                self.current_index = i
+                self.latest_spectrum = self.spectra.iloc[i]
+
+                timestamp = self.timestamps.iloc[i]
+
+                print(f"[FRAME] index={i}, timestamp={timestamp}")
+
+                # Determine next timestamp
+                if i + 1 < len(self.timestamps):
+                    next_timestamp = self.timestamps.iloc[i + 1]
+                else:
+                    next_timestamp = self.end_timestamp
+
+                real_time = (next_timestamp - self.first_timestamp).total_seconds()
+                elapsed_time = time.time() - start_time
+                pause_time = max(real_time - elapsed_time, 0)
+
+                print(
+                    f"[TIMING] real_time={real_time:.4f}, "
+                    f"elapsed_time={elapsed_time:.4f}, "
+                    f"pause_time={pause_time:.4f}\n"
+                )
+
+                time.sleep(pause_time)
+
+            print("[CYCLE END] Reached end timestamp. Restarting from beginning.\n")
+
+            # Reset automatically after reaching end
+            self.current_index = 0
+            self.latest_spectrum = self.spectra.iloc[0]                                                                    
 
 def main():
     data_path = Path("./../data/spectra.csv")
@@ -144,11 +122,14 @@ def main():
     df = pd.read_csv(data_path)
     timestamps, spectra, wavenumbers = parse_data(df)
 
-    replay_simulation(
+    simulator = SpectrumSimulator(
         timestamps  = timestamps,
         spectra     = spectra,
         wavenumbers = wavenumbers
     )
+
+    simulator.start()
+    simulator.replay_simulation()
 
 
 if __name__ == "__main__":
