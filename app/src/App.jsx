@@ -1,8 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import html2canvas from "html2canvas"; 
 import "./App.css";
 
+import SidePanel from "./components/SidePanel";
+import ControlButton from "./components/ControlButton";
 import SpectrumChart from "./components/SpectrumChart";
-import { getCurrentSpectrum, formatSpectrum } from "./api";
+import { 
+  getCurrentSpectrum, 
+  formatSpectrum, 
+  startSimulation,
+  stopSimulation,
+  setSimulationTime
+} from "./api";
 
 function formatTimestamp(timestamp) {
   if (!timestamp) {
@@ -24,28 +33,66 @@ function App() {
   const [minLimit, setMinLimit] = useState(null);
   const [maxLimit, setMaxLimit] = useState(null);
   const [currentTimestamp, setCurrentTimestamp] = useState(null);
+  const [everyTimestamp, setEveryTimestamp] = useState([]);
+  const [selectedTimestampIndex, setSelectedTimestampIndex] = useState("");
   const [pauseTime, setPauseTime] = useState(null);
   const [timerAnchor, setTimerAnchor] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const chartRef = useRef(null);
 
   const timerText = formatTimestamp(currentTimestamp);
 
-  useEffect(() => {
-    let isMounted = true;
+  
+  async function handleTakeScreenshot() {
+    if (!chartRef.current) return;
 
-    async function fetchSpectrum() {
+    const canvas = await html2canvas(chartRef.current, {
+      backgroundColor: null,
+    });
+
+    const image = canvas.toDataURL("image/png");
+
+    const link = document.createElement("a");
+    link.href = image;
+    link.download = `spectrum-${Date.now()}.png`;
+    link.click();
+  }
+
+  async function handleTimestampSelect(event) {
+    const index = event.target.value;
+    const selectedTimestamp = everyTimestamp[index];
+
+    setSelectedTimestampIndex(index);
+    setCurrentTimestamp(selectedTimestamp);
+    setTimerAnchor(null);
+    setIsRunning(false);
+
+    try {
+      setErrorMessage("");
+
+      await setSimulationTime(selectedTimestamp);
+      await fetchSpectrum();
+
+      setCurrentTimestamp(selectedTimestamp);
+      setTimerAnchor(null);
+    } catch (error) {
+      setErrorMessage(error.message);
+    }
+  }
+
+  async function fetchSpectrum() {
       try {
         setErrorMessage("");
 
         const apiData = await getCurrentSpectrum();
         const chartData = formatSpectrum(apiData);
 
-        if (!isMounted) return;
-
         setSpectrumData(chartData);
         setMinLimit(apiData.min_limit);
         setMaxLimit(apiData.max_limit);
         setCurrentTimestamp(apiData.current_timestamp);
+        setEveryTimestamp(Object.values(apiData.every_timestamp)); // convert to array 
         setPauseTime(apiData.pause_time);
 
         setTimerAnchor({
@@ -53,26 +100,43 @@ function App() {
           browserTime: Date.now(),
         });
       } catch (error) {
-        if (!isMounted) return;
-
         setErrorMessage(error.message);
-      } finally {
       }
     }
 
+  async function handleStart() {
+    await startSimulation();
+    setIsRunning((current) => !current);
+  }
+
+  async function handleStop() {
+    await stopSimulation();
+
+    setIsRunning(false);
+    setTimerAnchor(null);
+
+    await fetchSpectrum();
+  }
+
+  // For fetching spectrum data
+  useEffect(() => {
+    // Initial fetch
     fetchSpectrum();
+
+    // If stopped, do not create interval
+    if (!isRunning) return;
 
     const intervalId = setInterval(fetchSpectrum, pauseTime * 1000);
 
     return () => {
-      isMounted = false;
       clearInterval(intervalId);
     };
 
-  }, []);
+  }, [isRunning, pauseTime]);
 
+  // For setting smooth transition on timer
   useEffect(() => {
-    if (!timerAnchor) return;
+    if (!timerAnchor || !isRunning) return;
 
     const timerIntervalId = setInterval(() => {
       const apiTime = new Date(timerAnchor.apiTimestamp).getTime();
@@ -86,7 +150,7 @@ function App() {
     return () => {
       clearInterval(timerIntervalId);
     };
-  }, [timerAnchor]);
+  }, [timerAnchor, isRunning]);
 
   return (
     <main className="app">
@@ -96,12 +160,46 @@ function App() {
         <>
           <section className="timer">
             <h1>{timerText}</h1>
+            <select
+              value={selectedTimestampIndex}
+              onChange={handleTimestampSelect}
+            >
+              <option value="">Select timestamp</option>
+
+              {everyTimestamp.map((timestamp, index) => (
+                <option key={index} value={index}>
+                  {index} - {formatTimestamp(timestamp)}
+                </option>
+              ))}
+            </select>
           </section>
-          <SpectrumChart 
-            data={spectrumData}
-            minLimit={minLimit}
-            maxLimit={maxLimit}
-          />
+
+          <section className="dashboard">
+            <div className="left-column">
+              <div ref={chartRef}>
+                <SpectrumChart 
+                  data={spectrumData}
+                  minLimit={minLimit}
+                  maxLimit={maxLimit}
+                />
+              </div>
+              <div className="controls">
+                <ControlButton
+                  icon={isRunning ? "||" : "▷"}
+                  variant="start"
+                  onClick={handleStart}
+                />
+
+                <ControlButton
+                  icon="▫"
+                  variant="stop"
+                  onClick={handleStop}
+                />
+              </div>
+            </div>
+          
+          <SidePanel onTakeScreenshot={handleTakeScreenshot} />
+          </section>
         </>
       )}
     </main>

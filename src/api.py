@@ -79,7 +79,8 @@ def get_current_spectrum():
         "max_limit": simulator.max_limit,
         "first_timestamp": simulator.first_timestamp,
         "end_timestamp": simulator.end_timestamp,
-        "current_timestamp": simulator.current_timestamp
+        "current_timestamp": simulator.current_timestamp,
+        "every_timestamp": simulator.timestamps
     }
 
 @app.put("/set-simulation-time/{timestamp}")
