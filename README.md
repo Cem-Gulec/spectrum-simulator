@@ -62,6 +62,9 @@ cd spectrum-simulator/src
 python -m venv spectrum-simulator
 spectrum-simulator\Scripts\activate
 
+# For linux:
+source spectrum-simulator/bin/activate
+
 # Install dependencies for Python
 pip install -r ./../requirements.txt
 ```
@@ -77,7 +80,8 @@ npm install
 #### 4.2. Running the Backend
 
 ```bash
-# At the location spectrum-simulator/src
+# spectrum-simulator/src
+cd ./../src
 uvicorn api:app --reload
 ```
 
