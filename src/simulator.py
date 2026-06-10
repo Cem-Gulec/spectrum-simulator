@@ -111,11 +111,11 @@ class SpectrumSimulator:
                     print("[RESTART] Resetting simulation to first spectrum\n")
                     break
 
-                # Pause handling
+                # Measuring how long the simulation paused
                 pause_start = None
 
                 while not self.running:
-
+                    # if restarted while pausing
                     if self.restart:
                         break
 
@@ -158,16 +158,16 @@ class SpectrumSimulator:
                 else:
                     next_timestamp = self.end_timestamp
 
-                #real_time = (next_timestamp - self.first_timestamp).total_seconds()
-                #elapsed_time = time.time() - start_time
-                #pause_time = max(real_time - elapsed_time, 0)
+                real_time = (next_timestamp - self.first_timestamp).total_seconds()
+                elapsed_time = time.time() - start_time
+                self.pause_time = max(real_time - elapsed_time, 0)
 
                 # Computing the time to pause on the current timestamp
                 # to match the simulation time
-                self.pause_time = (next_timestamp - timestamp).total_seconds()
+                #self.pause_time = (next_timestamp - timestamp).total_seconds()
                 
                 # to avoid negative values
-                self.pause_time = max(self.pause_time, 0)
+                #self.pause_time = max(self.pause_time, 0)
 
                 '''print(
                     f"[TIMING] real_time={real_time:.4f}, "
